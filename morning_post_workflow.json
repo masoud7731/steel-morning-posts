@@ -1,0 +1,107 @@
+{
+  "name": "Morning Post from JSON",
+  "nodes": [
+    {
+      "parameters": {
+        "cronExpression": "0 8 * * *"
+      },
+      "id": "1",
+      "name": "Start Morning",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "filePath": "/data/morning_post_data.json",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Read Morning File",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "\nconst today = new Date();\nconst day = today.getDate() - 1; // index starts from 0\nconst data = JSON.parse(Buffer.from(items[0].binary.data.data, 'base64').toString());\nreturn [{\n  json: {\n    message: `${data[day].صبح بخیر}\\n\\n${data[day][\"آیا می‌دانید؟\"]}`\n  }\n}];\n"
+      },
+      "id": "3",
+      "name": "Extract Today's Message",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "📨 *پست صبحگاهی امروز:*\n\n{{$json[\"message\"]}}",
+        "parseMode": "Markdown"
+      },
+      "id": "4",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Start Morning": {
+      "main": [
+        [
+          {
+            "node": "Read Morning File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Morning File": {
+      "main": [
+        [
+          {
+            "node": "Extract Today's Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Today's Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "active": false,
+  "versionId": "1",
+  "id": "2",
+  "meta": {
+    "instanceId": "n8n-steel-morning-flow"
+  }
+}
